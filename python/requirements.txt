@@ -1,0 +1,11 @@
+﻿fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+PyPDF2==3.0.1
+python-docx==1.1.2
+chardet==5.2.0
+requests==2.32.3
+cryptography>=41,<44
+pywin32>=306; sys_platform == "win32"
+pillow==10.4.0
+pytesseract==0.3.13

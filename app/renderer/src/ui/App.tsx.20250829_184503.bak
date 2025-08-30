@@ -1,0 +1,286 @@
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimBus } from "./anim/bus";
+
+declare global { interface Window { arcano?: any } }
+
+type View = "loading" | "desk";
+type Tab = "library" | "summarize" | "upload";
+type Preset = "bullet" | "cheatsheet" | "exam";
+
+export default function App(){
+  const [view,setView]=useState<View>("loading");
+  const [tab,setTab]=useState<Tab>("library");
+
+  // staged data
+  const [health,setHealth]=useState<any>(null);
+  const [cfg,setCfg]=useState<any>(null);
+  const [perms,setPerms]=useState<any>(null);
+  const [sec,setSec]=useState<any>(null);
+
+  // progress
+  const [progress,setProgress]=useState(0);
+  const [stage,setStage]=useState("Summoning…");
+
+  // library
+  const [docs,setDocs]=useState<any[]>([]);
+  const [scanBusy,setScanBusy]=useState(false);
+
+  // summarize
+  const [summary,setSummary]=useState("");
+  const [multi,setMulti]=useState<Array<{style:string;summary:string}>>([]);
+  const [sumInput,setSumInput]=useState("");
+  const [sumMode,setSumMode]=useState<"path"|"query">("path");
+  const [selected,setSelected]=useState<Preset[]>(["bullet"]);
+  const [maxWords,setMaxWords]=useState(350);
+
+  // fireworks
+  const [fw,setFw]=useState<{x:number,y:number,id:number}|null>(null);
+  const fwTimer = useRef<any>(null);
+  const fwId = useRef(0);
+
+  // WARMUP ORCHESTRATION
+  useEffect(()=>{ (async()=>{
+    // Kick warmup (quick=false -> primes both models lightly)
+    await window.arcano?.warmupStart?.(false);
+    // Pull health immediately (non-blocking)
+    const h = await window.arcano?.ping?.(); setHealth(h);
+
+    // Poll warmup
+    let done=false;
+    const poll = async ()=>{
+      const s = await window.arcano?.warmupStatus?.();
+      const pct = Math.max(0, Math.min(100, Math.round(s?.progress || 0)));
+      setProgress(pct); setStage(s?.stage || "Preparing…");
+      if(pct >= 100){ done = true; finalize(); return; }
+      setTimeout(poll, 250);
+    };
+    const finalize = async ()=>{
+      // in parallel, get config, perms, security
+      const [c,p,se] = await Promise.all([
+        window.arcano?.getConfig?.(),
+        window.arcano?.getPermissions?.(),
+        window.arcano?.securityStatus?.(),
+      ]);
+      setCfg(c); setPerms(p); setSec(se);
+      // defer library list (last for faster first paint)
+      const lib = await window.arcano?.listLibrary?.(); if(lib?.ok) setDocs(lib.docs||[]);
+      requestAnimationFrame(()=> setView("desk"));
+    };
+    poll();
+
+    // fireworks occasional while loading and in app
+    const schedule = ()=>{
+      if(fwTimer.current) clearTimeout(fwTimer.current);
+      const next = 12000 + Math.random()*18000;
+      fwTimer.current = setTimeout(()=>{
+        fwId.current += 1;
+        const x = Math.random()*80 + 10;
+        const y = Math.random()*40 + 20;
+        setFw({x,y,id:fwId.current}); setTimeout(()=>setFw(null), 1800);
+        schedule();
+      }, next);
+    };
+    schedule();
+    return ()=> { if(fwTimer.current) clearTimeout(fwTimer.current) };
+  })(); },[]);
+
+  // LIBRARY OPS
+  async function refreshLibrary(){ const r=await window.arcano?.listLibrary?.(); if(r?.ok) setDocs(r.docs||[]) }
+  async function requestScan(dir?:string){
+    AnimBus.emit({type:"AI:library:scan:start"});
+    setScanBusy(true);
+    const r=await window.arcano?.scanDir?.(dir);
+    setScanBusy(false);
+    AnimBus.emit({type:"AI:library:scan:done"});
+    if(r?.need_permission) alert(`Permission needed:\n${r.dir}\nUse Library → Permissions → Grant.`);
+    await refreshLibrary();
+  }
+  async function grant(dir:string){ await window.arcano?.grantPermission?.(dir); setPerms(await window.arcano?.getPermissions?.()) }
+
+  // PRESETS
+  function togglePreset(k:Preset){ setSelected(prev => prev.includes(k) ? prev.filter(x=>x!==k) : [...prev, k]) }
+
+  async function doSummarize(){
+    setSummary(""); setMulti([]);
+    AnimBus.emit({type:"AI:summary:start"});
+    const styles = selected.length ? selected : ["bullet"];
+    const payload = sumMode==="path" ? {path: sumInput, styles, max_words: maxWords} : {query: sumInput, styles, max_words: maxWords};
+    if(styles.length === 1){
+      const res = sumMode==="path"
+        ? await window.arcano?.summarizePath?.(sumInput, {style: styles[0], max_words: maxWords, with_context:true})
+        : await window.arcano?.summarizeQuery?.(sumInput, {style: styles[0], max_words: maxWords, with_context:true});
+      setSummary(res?.summary || JSON.stringify(res,null,2));
+    } else {
+      const res = await window.arcano?.summarizeMulti?.(payload);
+      setMulti((res?.summaries || []) as Array<{style:string;summary:string}>);
+    }
+    AnimBus.emit({type:"AI:summary:done"});
+  }
+
+  return (
+    <div style={{padding:18, position:"relative"}}>
+      <Background firework={fw}/>
+      {view==="loading" ? <RetroLoader progress={progress} stage={stage}/> :
+        <div className="grid" style={{maxWidth:1100, margin:"0 auto", position:"relative"}}>
+          <div className="torch" style={{left:10}}/>
+          <div className="torch" style={{right:10}}/>
+
+          <header className="card" style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div className="banner pixel">🧙 ARCANO DESK</div>
+              <div className="small" style={{marginTop:6}}>{health?.ok ? "Models ready at the desk." : "Waking the quills…"}</div>
+            </div>
+            <div style={{display:"flex", gap:8, flexWrap:"wrap"}}>
+              <div className="badge">🔒 {cfg?.offline ? "OFFLINE" : "ONLINE"}</div>
+              <div className="badge">🔐 {sec?.encrypted ? (sec?.dpapi ? "ENC (DPAPI)" : "ENCRYPTED") : "PLAIN"}</div>
+              <button className="button ghost" onClick={async()=>{
+                const next=!cfg?.offline; const r=await window.arcano?.setConfig?.({offline:next}); setCfg(r?.config||{offline:next});
+              }}>{cfg?.offline? "ALLOW INTERNET (LATER)" : "DISABLE INTERNET"}</button>
+            </div>
+          </header>
+
+          <nav className="tabbar card">
+            <TabBtn active={tab==="library"} onClick={()=>setTab("library")}>📚 LIBRARY</TabBtn>
+            <TabBtn active={tab==="summarize"} onClick={()=>setTab("summarize")}>✒️ SUMMARIZE</TabBtn>
+            <TabBtn active={tab==="upload"} onClick={()=>setTab("upload")}>📜 FOREFETTING</TabBtn>
+          </nav>
+
+          {tab==="library" && (
+            <section className="card">
+              <h3 style={{marginTop:0}}><span className="banner pixel">📚 LIBRARY</span></h3>
+              <div className="small" style={{marginBottom:8}}>Indexes files in-place (PDF / DOCX / CSV). Grant access, then scan.</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}>
+                <span className="badge"><span>🪶</span> GEN: {health?.gen_model||"?"}</span>
+                <span className="badge"><span>🧩</span> EMB: {health?.embed_model||"?"}</span>
+              </div>
+              <div className="grid" style={{gridTemplateColumns:"1fr 2fr", gap:16}}>
+                <div className="card">
+                  <h4 style={{marginTop:0}}>Permissions</h4>
+                  <div className="small" style={{marginBottom:6}}>Grant access before scanning a folder.</div>
+                  <div className="grid" style={{gap:8}}>
+                    {(perms?.suggested_dirs||[]).map((d:string,i:number)=>(
+                      <div key={i} className="card" style={{background:"#0f0b19"}}>
+                        <div className="small" style={{marginBottom:6}}>{d}</div>
+                        <button className="button" onClick={()=>grant(d)}>GRANT</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{display:"flex",gap:8,marginBottom:10}}>
+                    <button className="button" onClick={()=>requestScan()}>SCAN LIBRARY</button>
+                    <button className="button ghost" onClick={()=>requestScan((perms?.suggested_dirs||[])[1])}>SCAN DOWNLOADS</button>
+                    <span className="badge">{scanBusy?"🔍 SCANNING…":"✅ IDLE"}</span>
+                  </div>
+                  <div className="grid">
+                    {docs.length===0? <div className="small">No documents indexed yet.</div> :
+                      docs.map(d=>(
+                        <div key={d.id} className="card" style={{background:"#0f0b19"}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+                            <div style={{maxWidth:"80%"}}>
+                              <div style={{fontWeight:800,color:"#efeaff"}}>{d.path.split("\\").pop()}</div>
+                              <div className="small" title={d.path}>{d.path}</div>
+                            </div>
+                            <button className="button" onClick={()=>{ setTab("summarize"); setSumMode("path"); setSumInput(d.path); }}>SUMMARIZE</button>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {tab==="summarize" && (
+            <section className="card">
+              <h3 style={{marginTop:0}}><span className="banner pixel">✒️ SUMMARIZE</span></h3>
+              <div style={{display:"flex",gap:8,marginBottom:8}}>
+                <button className={`tab ${sumMode==="path"?"active":""}`} onClick={()=>setSumMode("path")}>BY PATH</button>
+                <button className={`tab ${sumMode==="query"?"active":""}`} onClick={()=>setSumMode("query")}>BY QUERY</button>
+              </div>
+              <input className="input" placeholder={sumMode==="path"?"e.g. C:\\Users\\desmo\\Downloads\\paper.pdf":"Search topic across Library"} value={sumInput} onChange={e=>setSumInput(e.target.value)} />
+              <div className="card" style={{marginTop:10}}>
+                <div className="small" style={{marginBottom:6}}>Select one or chain multiple presets:</div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {(["bullet","cheatsheet","exam"] as Preset[]).map(p=>(
+                    <button key={p} className={`tab ${selected.includes(p)?"active":""}`} onClick={()=>togglePreset(p)}>
+                      {{bullet:"STUDY BULLETS", cheatsheet:"CHEAT SHEET", exam:"EXAM"}[p]}
+                    </button>
+                  ))}
+                  <label className="badge">MAX:
+                    <input type="number" className="input" style={{width:100, marginLeft:8}} value={maxWords} onChange={e=>setMaxWords(parseInt(e.target.value||"350"))}/>
+                  </label>
+                  <button className="button" onClick={doSummarize}>CONJURE</button>
+                </div>
+              </div>
+
+              {multi.length>0 ? (
+                <div className="grid" style={{marginTop:12}}>
+                  {multi.map((m,i)=>(
+                    <div key={i} className="card">
+                      <h4 style={{marginTop:0}}>{m.style[0].toUpperCase()+m.style.slice(1)}</h4>
+                      <pre>{m.summary}</pre>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="card" style={{marginTop:12}}>
+                  <h4 style={{marginTop:0}}>Summary</h4>
+                  <pre>{summary || "Your summary will appear here…"}</pre>
+                </div>
+              )}
+            </section>
+          )}
+
+          {tab==="upload" && (
+            <section className="card">
+              <h3 style={{marginTop:0}}><span className="banner pixel">📜 FOREFETTING</span></h3>
+              <div className="card" style={{marginBottom:8}}>
+                <input className="input" placeholder="Paste a file path (.pdf, .docx, .csv)" value={sumInput} onChange={e=>setSumInput(e.target.value)} />
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button className="button" onClick={()=>{ setTab("summarize"); setSumMode("path"); }}>SUMMARIZE</button>
+                <button className="button ghost" onClick={()=>{ if(!sumInput) return; const folder=sumInput.replace(/\\\\/g,"\\").split("\\").slice(0,-1).join("\\"); alert("Tip: grant permission to the file's folder:\n"+folder); }}>SUGGEST PERMISSION</button>
+              </div>
+            </section>
+          )}
+        </div>
+      }
+    </div>
+  );
+}
+
+function Background({firework}:{firework:{x:number,y:number,id:number}|null}){
+  return <div className="bg-wrap">
+    <div className="stars pixel"/>
+    <div className="stars2 pixel"/>
+    <div className="stars3 pixel"/>
+    {firework && <div key={firework.id} className="firework" style={{left:`${firework.x}vw`, top:`${firework.y}vh`}}/>}
+  </div>
+}
+
+function RetroLoader({progress, stage}:{progress:number; stage:string}){
+  const pct = Math.min(100, Math.max(0, Math.round(progress)));
+  return (
+    <div style={{maxWidth:920, margin:"40px auto"}}>
+      <div className="card" style={{marginBottom:12, textAlign:"center"}}>
+        <div className="banner pixel">🔮 ARCANO DESK</div>
+      </div>
+      <div className="scene pixel" style={{position:"relative", overflow:"hidden", marginBottom:12}}>
+        <div className="castle pixel"/>
+        <div className="tree t1 pixel"/><div className="tree t2 pixel"/>
+        <div className="tree t3 pixel"/><div className="tree t4 pixel"/>
+      </div>
+      <div className="card">
+        <div className="small" style={{marginBottom:6, fontFamily:"ArcanoPixel, monospace"}}>{stage.toUpperCase()}</div>
+        <div className="progress"><i style={{width: pct+"%"}}/></div>
+        <div className="small" style={{marginTop:6}}>{pct}%</div>
+      </div>
+    </div>
+  );
+}
+
+function TabBtn(p:{active:boolean;onClick:()=>void;children:any}){
+  return <button className={`tab ${p.active?"active":""}`} onClick={p.onClick}>{p.children}</button>
+}

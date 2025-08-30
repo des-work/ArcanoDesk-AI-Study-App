@@ -1,0 +1,24 @@
+﻿import React from "react";
+import { useFlow } from "../../providers/FlowProvider";
+
+export default function EnterGate() {
+  const { setFlow } = useFlow();
+
+  return (
+    <div style={{ textAlign: "center", padding: "60px", color: "white" }}>
+      🏰 Welcome to ArcanoDesk
+      <br />
+      <button
+        style={{
+          marginTop: "20px",
+          padding: "10px 20px",
+          fontSize: "18px",
+          cursor: "pointer"
+        }}
+        onClick={() => setFlow("desk")}
+      >
+        ENTER
+      </button>
+    </div>
+  );
+}

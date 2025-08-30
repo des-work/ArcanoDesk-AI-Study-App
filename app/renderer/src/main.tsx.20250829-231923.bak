@@ -1,0 +1,19 @@
+﻿import React from "react";
+import { createRoot } from "react-dom/client";
+import Root from "./ui/Root";
+import { UIProvider } from "./providers/UIProvider";
+import { SummaryOverlay } from "./components/ui/SummaryOverlay";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import "./ui/global.css";
+import "./ui/theme.css";
+
+const root = createRoot(document.getElementById("root")!);
+root.render(<ErrorBoundary><React.Suspense fallback={<div style={{display:"grid",placeItems:"center",height:"100%"}}><div style={{opacity:.8}}>Loading…</div></div>}>
+    <UIProvider>
+      <>
+        <Root />
+        <SummaryOverlay />
+      </>
+    </UIProvider>
+  </ErrorBoundary>
+</React.Suspense></ErrorBoundary>);

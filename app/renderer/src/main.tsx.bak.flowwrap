@@ -1,0 +1,28 @@
+﻿import { SummaryOverlay } from "./components/ui/SummaryOverlay";
+import BootHud from "./components/dev/BootHud";
+import "./theme/applyEarly";
+import React, { Suspense } from "react";
+import { createRoot } from "react-dom/client";
+
+import ErrorBoundary from "./components/ErrorBoundary";
+import { UIProvider } from "./providers/UIProvider";
+import { FlowProvider } from "./providers/FlowProvider";
+import Root from "./ui/Root";
+import "./ui/global.css";
+import "./ui/theme.css";
+
+const root = createRoot(document.getElementById("root")!);
+
+root.render(<ErrorBoundary>
+  <UIProvider>
+    <Suspense fallback={<div style={{color:"#e9e4ff", padding:12}}>⏳ Loading…</div>}>
+      <>
+        <Root />
+        <SummaryOverlay />
+        {import.meta.env.DEV && <BootHud />}
+      </>
+    </Suspense>
+  </UIProvider>
+</ErrorBoundary>);
+
+

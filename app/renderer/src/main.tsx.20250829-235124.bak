@@ -1,0 +1,20 @@
+﻿import React from "react";
+import ReactDOM from "react-dom/client";
+import Root from "./ui/Root";
+import { UIProvider } from "./providers/UIProvider";
+import { FlowProvider } from "./providers/FlowProvider";
+import ErrorBoundary from "./components/ErrorBoundary";
+import "./ui/global.css";
+import "./ui/theme.css";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <FlowProvider>
+        <UIProvider>
+          <Root />
+        </UIProvider>
+      </FlowProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);

@@ -1,0 +1,45 @@
+﻿import React, { createContext, useContext, useMemo, useState } from "react";
+import { theme } from "../config";
+import { applyTheme, makeTheme } from "../theme/engine";
+import { VARIANTS } from "../theme/variants";
+
+type View = "loading" | "desk";
+type SummaryProgress = { active: boolean; percent: number; message?: string };
+
+type UIState = {
+  view: View; setView: (v: View)=>void;
+  summary: SummaryProgress; setSummary: (s: SummaryProgress)=>void;
+  animSpeed: number; setAnimSpeed: (n:number)=>void;
+  soundEnabled: boolean; setSoundEnabled: (b:boolean)=>void;
+  getTheme: ()=> typeof theme;
+  setThemeVariant: (k: keyof typeof VARIANTS)=>void;
+};
+
+export const UIContext = createContext<UIState | null>(null);
+
+export function UIProvider({ children }:{children: React.ReactNode}) {
+  const [view, setView] = useState<View>("loading");
+  const [summary, setSummary] = useState<SummaryProgress>({ active:false, percent:0, message:"" });
+  const [animSpeed, setAnimSpeed] = useState<number>(1.0);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
+
+  const value = useMemo<UIState>(()=>({
+    view, setView,
+    summary, setSummary,
+    animSpeed, setAnimSpeed,
+    soundEnabled, setSoundEnabled,
+    getTheme: ()=> theme,
+    setThemeVariant: (k)=> { const rt = makeTheme(VARIANTS[k]); applyTheme(rt); }
+  }), [view, summary, animSpeed, soundEnabled]);
+
+  return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
+}
+
+export function useUI(){
+  const ctx = useContext(UIContext);
+  if (!ctx) throw new Error("useUI must be used within UIProvider");
+  return ctx;
+}
+
+
+

@@ -1,0 +1,21 @@
+﻿import React, { Suspense } from "react";
+import { useFlow } from "../providers/FlowProvider";
+
+const Loading = React.lazy(() => import("../components/ui/Loading"));
+const EnterGate = React.lazy(() => import("../components/ui/EnterGate"));
+const Desk = React.lazy(() => import("../components/ui/Desk"));
+const Fallback = React.lazy(() => import("../components/ui/Fallback"));
+
+export default function Root() {
+  const { flow } = useFlow();
+
+  return (
+    <Suspense fallback={<div style={{ color: "white" }}>⏳ Loading...</div>}>
+      {flow === "boot" && <div style={{ color: "white" }}>Starting...</div>}
+      {flow === "loading" && <Loading />}
+      {flow === "gate" && <EnterGate />}
+      {flow === "desk" && <Desk />}
+      {!["boot","loading","gate","desk"].includes(flow) && <Fallback />}
+    </Suspense>
+  );
+}

@@ -1,0 +1,13 @@
+﻿# Node
+node_modules/
+app/renderer/node_modules/
+dist/
+*.log
+
+# Python
+python/.venv/
+__pycache__/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,32 @@
+﻿:root{
+  --bg:#0b0714;
+  --panel:#161126;
+  --text:#e9e4ff;
+  --accent:#7b5cff;
+  --accentText:#0b0714;
+  --line:#2a2142;
+  --success:#8bf389;
+  --warn:#ffd166;
+}
+html,body,#root{height:100%}
+body{
+  background: var(--bg);
+  color: var(--text);
+}
+.card{
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+}
+.button{
+  border: 1px solid var(--line);
+  background: var(--accent);
+  color: var(--accentText);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 800;
+}
+.tab.active{ background: var(--accent); color: var(--accentText); }
+.badge{ border:1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+.small{ opacity:.8; font-size:12px }

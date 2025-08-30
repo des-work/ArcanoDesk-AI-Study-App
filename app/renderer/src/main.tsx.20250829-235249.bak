@@ -1,0 +1,24 @@
+﻿import React, { Suspense } from "react";
+import { createRoot } from "react-dom/client";
+
+import ErrorBoundary from "./components/ErrorBoundary";
+import { UIProvider } from "./providers/UIProvider";
+import "./ui/global.css";
+import "./ui/theme.css";
+
+const EnterGate = React.lazy(() => import("./components/ui/EnterGate"));
+const Desk = React.lazy(() => import("./components/ui/Desk"));
+
+const root = createRoot(document.getElementById("root")!);
+
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <UIProvider>
+        <Suspense fallback={<div style={{ color: "white", padding: "20px" }}>⏳ Loading...</div>}>
+          <EnterGate />
+        </Suspense>
+      </UIProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);

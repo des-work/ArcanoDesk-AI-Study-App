@@ -1,0 +1,127 @@
+﻿{
+  "styleMode": "modernRetroHybrid",
+  "palette": "arcanestorybook",
+  "scaleMode": "responsive",
+  "chrome": "goldTrimmedScrolls",
+  "menus": "scrolls",
+  "crtScan": false,
+  "sectionTransitions": true,
+  "storyVibe": "storybook",
+  "dayNightCycle": true,
+  "seasonalThemes": true,
+
+  "castle": {
+    "detail": "detailedPartial",
+    "enterAnimation": "drawbridge",
+    "flags": false,
+    "torches": true,
+    "moatReflections": false,
+    "clouds": true,
+    "depthLayers": true,
+    "surrounding": "forestBack",
+    "villagers": "few",
+    "runeGlowAtNight": true,
+    "dragonFlybys": true,
+    "tone": "gothic",
+    "seasonalChanges": true,
+    "banners": false,
+    "easterEggs": true
+  },
+
+  "land": {
+    "biome": "lushGreen",
+    "riverDay": "water",
+    "riverNight": "glowPurpleGreen",
+    "trees": "minimalSilhouette",
+    "wildlife": "occasional",
+    "mountainParallax": false,
+    "pathToGate": true,
+    "grassSway": false,
+    "grassDetail": "someDetail",
+    "bridges": "few",
+    "firefliesAtNight": true
+  },
+
+  "wizard": {
+    "visible": true,
+    "thinkAnim": true,
+    "spellMap": { "summarize": "lightning", "analyze": "fire", "annotate": "ice" },
+    "booksFly": false,
+    "familiar": true,
+    "greeting": "cheeky",
+    "floatingScrollsOnDone": false,
+    "confidenceColors": true,
+    "speechBubbles": true,
+    "lightAffectsWorld": true
+  },
+
+  "retroUI": {
+    "buttonStyle": "scrolls",
+    "icons": "toolIcons",
+    "hudManaBar": true,
+    "scoreStyle": false,
+    "menuSlide": true,
+    "soundFxToggle": true,
+    "progressAsHP": false,
+    "miniMap": false,
+    "errorAsFizzle": true,
+    "saveAsInteractableItems": true
+  },
+
+  "sky": {
+    "stars": "randomized",
+    "shootingStars": "occasional",
+    "moonPhases": true,
+    "constellationGlow": "rare",
+    "starStyle": "default",
+    "fireworksOnComplete": false,
+    "aurora": true,
+    "cometTrails": true,
+    "flyingCreatures": true,
+    "cloudShadows": false
+  },
+
+  "desk": {
+    "material": "stoneArcaneGlow",
+    "quillAnim": true,
+    "candles": true,
+    "glowPages": false,
+    "miniBookshelf": true,
+    "storage": "booksOnShelf",
+    "placeFinishedOnShelf": true,
+    "font": "modernBody"
+  },
+
+  "aiFeedback": {
+    "thumbsAsFaces": true,
+    "crystalStrength": true,
+    "spellCircles": false,
+    "aiCorePulse": false,
+    "runesDuringLong": true,
+    "cardSuggestions": false,
+    "retroSfx": true,
+    "miscastErrors": true,
+    "illusionsAlt": false
+  },
+
+  "soundPrep": {
+    "style": "orchestral",
+    "ambientWindBirdsGates": true,
+    "summaryChime": true,
+    "errorFizzle": true,
+    "footsteps": false,
+    "riverLoop": false,
+    "twinkleChime": false,
+    "musicTracks": false,
+    "fireworksBoom": false,
+    "hudToggles": true
+  },
+
+  "flex": {
+    "modularEffects": true,
+    "themeSwap": false,
+    "globalAnimSpeed": true,
+    "pixiEverywhere": true,
+    "jsonThemeConfig": true
+  }
+}

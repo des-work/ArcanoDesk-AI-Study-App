@@ -1,0 +1,52 @@
+﻿import React, { useEffect, useRef } from "react";
+
+// Lazy import so failing environments never crash the bundle
+async function initPixiSafe(node: HTMLDivElement){
+  try{
+    const PIXI = await import("pixi.js");
+    // Detect Electron/Vite CSP issues; if throw happens, we catch above.
+    const app = new PIXI.Application({ width: 960, height: 540, backgroundAlpha: 0, antialias: true });
+    node.innerHTML = "";
+    node.appendChild(app.view as HTMLCanvasElement);
+
+    // simple, light stars
+    const starCont = new PIXI.Container();
+    app.stage.addChild(starCont);
+    for (let i=0;i<120;i++){
+      const g = new PIXI.Graphics();
+      const x = Math.random()*app.renderer.width;
+      const y = Math.random()*app.renderer.height;
+      const r = Math.random()*1.6 + 0.4;
+      g.beginFill(0xBFD7FF, 0.9).drawCircle(0,0,r).endFill();
+      g.x = x; g.y = y; g.alpha = 0.7 + Math.random()*0.3;
+      starCont.addChild(g);
+    }
+    let t = 0;
+    const ticker = app.ticker.add((delta: number)=>{
+      t += delta*0.03;
+      starCont.children.forEach((c, i)=>{ (c as any).alpha = 0.6 + 0.4*Math.sin(t * (0.3 + (i%7)*0.05)); });
+    });
+
+    return ()=>{ app.destroy(true,{children:true,texture:true,baseTexture:true}); (ticker as any)?.destroy?.(); };
+  }catch(_e){
+    // PIXI not allowed (unsafe-eval / CSP). No-op, leave placeholder.
+    node.innerHTML = "";
+    const div = document.createElement("div");
+    div.style.cssText = "width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:.35;font-size:12px";
+    div.textContent = "⭐ graphics temporarily disabled (CSP).";
+    node.appendChild(div);
+    return ()=>{};
+  }
+}
+
+type Props = { className?: string };
+export default function PixiStage({ className }: Props){
+  const ref = useRef<HTMLDivElement|null>(null);
+  useEffect(()=>{
+    if (!ref.current) return;
+    let cleanup: any = null;
+    initPixiSafe(ref.current).then(fn=> cleanup = fn);
+    return ()=>{ try{ cleanup?.(); }catch{} };
+  },[]);
+  return <div className={className} style={{width:"100%", height:"100%"}} ref={ref}/>;
+}

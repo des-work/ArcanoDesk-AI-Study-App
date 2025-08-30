@@ -1,0 +1,144 @@
+﻿:root{
+  --ink:#ebe6ff; --bg:#0b0a10; --card:#13111a; --accent:#7b5cff; --muted:#c6c1dd;
+  --sky1:#071427; --sky2:#0b1b3f;
+  --star:#f8e879; --comet:#9fd4ff; --spark:#9b7bff;
+  --grass1:#0f2b14; --grass2:#16371b; --grass3:#1d4422; /* richer greens */
+  --hill:#152b1f;
+  --castle:#cfd8ff; --castle-edge:#6e78a1; --stone:#b9c4ea;
+  --flag:#b95cff; --fire:#ffb967; --lightning:#b6e0ff;
+}
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  font-family:'Medieval Sharp', 'Press Start 2P', Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  color:var(--ink);
+  background: radial-gradient(1200px 800px at 50% 0%, #171326 0%, var(--bg) 60%);
+}
+.button{ background:var(--accent); color:#0c0a14; border:none; padding:12px 16px; border-radius:10px; font-weight:700; cursor:pointer; }
+.button.ghost{ background:transparent; border:1px solid #2a2142; color:var(--ink); }
+.badge{ display:inline-flex; align-items:center; gap:8px; background:#1a1530; border:1px solid #2a2142; border-radius:10px; padding:8px 10px; }
+.input{ background:#0f0d16; border:1px solid #2a2142; border-radius:10px; color:var(--ink); padding:12px 14px; }
+.card{ background:var(--card); border:1px solid #211b33; border-radius:16px; padding:16px; box-shadow:0 10px 40px rgba(0,0,0,.35); }
+.grid{ display:grid; gap:16px }
+.tab{ padding:10px 12px; border-radius:10px; background:#1a1530; border:1px solid #2a2142; color:var(--ink); font-weight:700; cursor:pointer; }
+.tab.active{ background:var(--accent); color:#0c0a14; }
+.small{ color:var(--muted); font-size:12px }
+
+/* ===== Retro loading scene ===== */
+.loading-wrap{ position:relative; max-width:1000px; margin:50px auto 0; }
+.pixel-title{
+  font-size:48px; letter-spacing:2px; text-align:center; margin:0 0 12px 0;
+  animation: floaty 3s ease-in-out infinite;
+}
+@keyframes floaty { 0%,100%{ transform:translateY(-2px) } 50%{ transform:translateY(2px) } }
+
+.scene{
+  position:relative; height:460px; border-radius:16px; overflow:hidden;
+  background:linear-gradient(180deg,var(--sky1),var(--sky2));
+  border:1px solid #2a2142;
+}
+.stars,.comets,.fireworks{ position:absolute; inset:0; pointer-events:none; }
+.star{ position:absolute; width:2px; height:2px; background:var(--star); opacity:.85; animation: twinkle 2.7s infinite ease-in-out alternate; }
+@keyframes twinkle { 0%{ transform:scale(.8); opacity:.6 } 100%{ transform:scale(1.2); opacity:1 } }
+.comet{ position:absolute; width:120px; height:2px; background:linear-gradient(90deg, var(--comet), transparent); opacity:.6; filter:blur(.3px); transform:rotate(-20deg); animation: comet 7s linear infinite; }
+@keyframes comet { 0%{ transform:translate(-20%,-10%) rotate(-20deg); opacity:0 } 10%{opacity:.6} 70%{opacity:.6} 100%{ transform:translate(120%,70%) rotate(-20deg); opacity:0 } }
+.firework{ position:absolute; width:2px; height:2px; background:var(--spark); border-radius:50%; animation: boom 2.2s ease-out; }
+@keyframes boom { 0%{ transform:translate(0,0) scale(1); opacity:0 } 20%{ opacity:1 } 100%{ transform:translate(var(--dx),var(--dy)) scale(1.2); opacity:0 } }
+
+/* Parallax */
+.layer{ position:absolute; inset:0; }
+.hills{
+  background:
+    radial-gradient(800px 300px at 20% 100%, var(--hill) 0, transparent 70%),
+    radial-gradient(700px 260px at 70% 100%, #10341f 0, transparent 70%);
+  bottom:0;
+}
+/* NEW: richly-layered pixel grass ground */
+.ground{
+  bottom:0;
+  background:
+    /* subtle rows for scanline-like retro vibe */
+    repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 2px, transparent 2px 4px),
+    /* tufts and darker ridges */
+    radial-gradient(10px 6px at 12% 86%, #0e2a15 0 60%, transparent 61%),
+    radial-gradient(14px 8px at 22% 88%, #15331b 0 60%, transparent 61%),
+    radial-gradient(12px 7px at 72% 86%, #123018 0 60%, transparent 61%),
+    radial-gradient(16px 9px at 86% 90%, #1a3b20 0 60%, transparent 61%),
+    /* base grass bands */
+    linear-gradient(180deg, var(--grass1) 0 30%, var(--grass2) 31% 65%, var(--grass3) 66% 100%);
+}
+
+/* trees over ground (sparse shapes add depth) */
+.trees{
+  background:
+    radial-gradient(ellipse 12px 28px at 50% 50%, #113018 0 60%, transparent 61%) 12% 86%/32px 36px,
+    radial-gradient(ellipse 14px 40px at 50% 50%, #113018 0 60%, transparent 61%) 22% 88%/36px 46px,
+    radial-gradient(ellipse 13px 34px at 50% 50%, #0f2a14 0 60%, transparent 61%) 72% 86%/34px 40px,
+    radial-gradient(ellipse 12px 30px at 50% 50%, #13351a 0 60%, transparent 61%) 86% 90%/30px 36px;
+  background-repeat:no-repeat;
+  opacity:.95;
+}
+
+/* ===== Castle | more detail: round towers, flags, crenels, windows, arched door, shadow */
+.castle{ position:absolute; left:50%; bottom:110px; transform:translateX(-50%); width:360px; height:200px; }
+.tower{
+  position:absolute; width:78px; height:150px; background:var(--castle); border:2px solid var(--castle-edge);
+  border-radius:36px 36px 18px 18px / 36px 36px 18px 18px; box-shadow: inset 0 -18px 0 rgba(0,0,0,.07);
+}
+.t1{ left:10px; bottom:0 } .t2{ right:10px; bottom:0 }
+.keep{
+  position:absolute; left:50%; transform:translateX(-50%); bottom:24px; width:190px; height:130px;
+  background:linear-gradient(180deg, #e6ebff, var(--castle)); border:2px solid var(--castle-edge); border-radius:12px;
+}
+/* crenelation strip */
+.crenels{
+  position:absolute; top:-16px; left:8px; right:8px; height:16px;
+  background:
+    repeating-linear-gradient(90deg, var(--stone) 0 18px, transparent 18px 30px);
+  border:2px solid var(--castle-edge); border-bottom:none; border-radius:6px 6px 0 0;
+}
+/* walkway shadow at keep base */
+.keep-shadow{ position:absolute; left:-6px; right:-6px; bottom:-8px; height:8px; background:linear-gradient(180deg, rgba(0,0,0,.35), transparent); filter:blur(2px); }
+/* windows & door */
+.window{ position:absolute; width:16px; height:20px; background:#2a3559; border:2px solid #8d96bf; border-radius:4px; box-shadow: inset 0 8px 0 rgba(255,255,255,.08); }
+.w1{ left:28px; top:38px } .w2{ right:28px; top:38px }
+.door{
+  position:absolute; left:50%; transform:translateX(-50%); bottom:6px; width:34px; height:46px;
+  background:#6b4a2c; border:2px solid #3c2a1b; border-radius:10px 10px 4px 4px / 12px 12px 4px 4px;
+  box-shadow: inset 0 10px 0 rgba(0,0,0,.15);
+}
+.knob{ position:absolute; right:6px; top:20px; width:6px; height:6px; background:#ffcc66; border-radius:50% }
+.flag{
+  position:absolute; width:0; height:0; border-top:10px solid transparent; border-bottom:10px solid transparent; border-left:22px solid var(--flag);
+  top:-8px; left:50%; transform:translateX(-50%); animation: flagwave 1.8s ease-in-out infinite;
+}
+@keyframes flagwave { 0%,100%{ transform:translateX(-50%) rotate(0deg) } 50%{ transform:translateX(-48%) rotate(4deg) } }
+.torch{ position:absolute; width:6px; height:14px; background:#774a2d; bottom:14px; left:50%; transform:translateX(-50%) }
+.flame{ position:absolute; width:10px; height:10px; background:radial-gradient(circle at 40% 40%, #ffd090 0 30%, #ff7e00 31% 70%, transparent 71%); top:-8px; left:-2px; animation:flicker .9s infinite ease-in-out }
+@keyframes flicker { 0%{ transform:scale(.9) translateY(0) } 50%{ transform:scale(1.1) translateY(-2px) } 100%{ transform:scale(.95) translateY(0) } }
+
+/* hover enter prompt */
+.enter-prompt{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); padding:10px 12px; border-radius:10px;
+  background:rgba(20,14,36,.9); border:1px solid #3b2b59; box-shadow:0 8px 24px rgba(0,0,0,.45); font-weight:800; opacity:0; pointer-events:none; transition:opacity .2s; }
+.castle:hover + .enter-prompt, .enter-prompt.hover{ opacity:1; }
+.enter-btn{ margin-top:8px; display:inline-block; background:linear-gradient(180deg, #ffe680, #ffbb33); color:#2a1a00; font-weight:900; padding:10px 14px; border-radius:10px; border:1px solid #a26b00; cursor:pointer; text-shadow:0 1px 0 #fff3b4; }
+
+/* ===== Summarize Progress (wizard vs dragon) ===== */
+.progress-overlay{ position:fixed; inset:0; background:rgba(10,8,16,.85); display:flex; align-items:center; justify-content:center; z-index:9999 }
+.progress-card{ width:min(680px, 94vw); border-radius:16px; background:#140f22; border:1px solid #352858; padding:16px }
+.duel{ position:relative; height:180px; margin-bottom:10px; background:linear-gradient(180deg, #0b1020, #0a0812); border:1px solid #2b2047; border-radius:12px; overflow:hidden }
+.wizard,.dragon{ position:absolute; bottom:12px; width:80px; height:100px; filter:contrast(1.1) saturate(1.1) }
+.wizard{ left:16px; background: radial-gradient(20px 24px at 50% 40%, #5b3fa6 0 30%, transparent 31%), radial-gradient(20px 20px at 50% 80%, #342353 0 30%, transparent 31%) }
+.dragon{ right:16px; background: radial-gradient(30px 26px at 50% 40%, #317542 0 40%, transparent 41%), radial-gradient(26px 30px at 50% 78%, #1a4928 0 40%, transparent 41%) }
+.blast{ position:absolute; bottom:60px; left:96px; width:0; height:0; border-radius:6px; background:linear-gradient(90deg, var(--fire), transparent); animation: fireblast 800ms linear infinite }
+.blast.lightning{ background:linear-gradient(90deg, var(--lightning), transparent); animation: zap 700ms linear infinite }
+@keyframes fireblast { 0%{ width:0; opacity:.2 } 100%{ width:420px; opacity:1 } }
+@keyframes zap { 0%{ width:0; opacity:.3 } 100%{ width:420px; opacity:1 } }
+.pbar{ height:16px; border-radius:10px; background:#0d0b16; border:1px solid #2e2451; overflow:hidden }
+.pfill{ height:100%; background:linear-gradient(90deg, #7b5cff, #9b7bff); width:0%; box-shadow: inset 0 0 8px rgba(0,0,0,.45); transition: width .2s ease }
+.stage{ margin-top:8px; font-size:12px; color:#c9c3e4 }
+
+/* embed Press Start 2P fallback if present locally */
+@font-face{ font-family:'Press Start 2P'; font-style:normal; font-weight:400; src: local('Press Start 2P'), local('PressStart2P'); }
+

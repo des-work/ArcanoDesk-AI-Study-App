@@ -1,0 +1,23 @@
+﻿import React from "react";
+import { createRoot } from "react-dom/client";
+
+import ErrorBoundary from "./components/ErrorBoundary";
+import { UIProvider } from "./providers/UIProvider";
+import { FlowProvider } from "./providers/FlowProvider";
+import Root from "./ui/Root";
+import "./ui/global.css";
+import "./ui/theme.css";
+
+const root = createRoot(document.getElementById("root")!);
+
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <UIProvider>
+        <FlowProvider>
+          <Root />
+        </FlowProvider>
+      </UIProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);

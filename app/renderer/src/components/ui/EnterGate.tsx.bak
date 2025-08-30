@@ -1,0 +1,90 @@
+﻿import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useUI } from "../../providers/UIProvider";
+
+async function pingWithTimeout(ms=2500): Promise<boolean> {
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(), ms);
+  try{
+    const res = await (window as any).arcano?.ping?.();
+    return !!res?.ok;
+  }catch(_e){
+    return false;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+export function EnterGate(){
+  const { setView } = useUI();
+  const [ready, setReady] = useState<boolean>(false);
+  const [checking, setChecking] = useState<boolean>(true);
+  const [msg, setMsg] = useState<string>("Checking backend…");
+
+  const runCheck = async ()=>{
+    setChecking(true);
+    setMsg("Checking backend…");
+    // two quick tries
+    const ok1 = await pingWithTimeout(2500);
+    if (ok1) { setReady(true); setMsg("Models ready. Drawbridge lowering."); setChecking(false); return; }
+    const ok2 = await pingWithTimeout(3500);
+    if (ok2) { setReady(true); setMsg("Models ready. Drawbridge lowering."); setChecking(false); return; }
+    setReady(false);
+    setMsg("Backend not ready yet. You can Retry or Force Enter.");
+    setChecking(false);
+  };
+
+  useEffect(()=>{ runCheck(); },[]);
+
+  return (
+    <div style={{position:"relative", width:"100%", height:"100%", padding:"24px"}}>
+      {/* (PIXI stub renders nothing heavy for now) */}
+      <div className="relative z-10" style={{display:"grid", placeItems:"center", height:"100%"}}>
+        <motion.div initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} transition={{type:"spring", damping:12, stiffness:140}}>
+          <div className="card" style={{background:"#140f23cc", border:"1px solid #2a2142", borderRadius:16, padding:20, textAlign:"center", minWidth:360}}>
+            <div style={{fontFamily:"'Press Start 2P',system-ui", letterSpacing:1, fontSize:22, marginBottom:10}}>
+              ARCANO DESK
+            </div>
+
+            <div className="small" style={{color:"#b9b1d6", marginBottom:16}}>
+              {checking ? "Checking…" : msg}
+            </div>
+
+            <div style={{display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap"}}>
+              <button
+                className="button"
+                disabled={!ready || checking}
+                onClick={()=> setView("desk")}
+                style={{opacity: (ready && !checking)?1:0.6, cursor:(ready && !checking)?"pointer":"not-allowed"}}
+                aria-disabled={!ready || checking}
+                title={ready ? "Enter the castle" : "Backend not ready yet"}
+              >
+                ✨ ENTER THE CASTLE
+              </button>
+
+              <button
+                className="button"
+                onClick={runCheck}
+                disabled={checking}
+                style={{background:"#2b2047", color:"#e9e4ff", opacity: checking?0.6:1}}
+                title="Retry backend check"
+              >
+                ↻ Retry
+              </button>
+
+              <button
+                className="button"
+                onClick={()=> setView("desk")}
+                style={{background:"#7b5cff", borderColor:"#7b5cff"}}
+                title="Bypass the check and go in now"
+              >
+                🛡 Force Enter
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+

@@ -1,0 +1,33 @@
+﻿{
+    "name":  "arcanodesk",
+    "private":  true,
+    "version":  "0.1.0",
+    "description":  "Arcano Desk - Local Agentic AI study assistant (Electron + React + Python).",
+    "main":  "app/electron/main.js",
+    "author":  "Desmond Workman",
+    "license":  "MIT",
+    "devDependencies":  {
+                            "concurrently":  "^9.2.1",
+                            "cross-env":  "^7.0.3",
+                            "electron":  "^30.5.1",
+                            "electron-builder":  "^24.13.3",
+                            "wait-on":  "^7.2.0"
+                        },
+    "scripts":  {
+                    "dev:renderer":  "npm --prefix ./app/renderer run dev",
+                    "build:renderer":  "npm --prefix ./app/renderer run build",
+                    "dev:electron":  "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+                    "start:python":  "powershell -ExecutionPolicy Bypass -File ./scripts/Start-PythonService.ps1",
+                    "dev":  "concurrently -k -n PY,WEB,ELN \"npm run start:python\" \"npm run dev:renderer\" \"wait-on http://localhost:5173 \u0026\u0026 npm run dev:electron\"",
+                    "build":  "npm run build:renderer",
+                    "start:pythonfast":  "powershell -ExecutionPolicy Bypass -File ./scripts/Start-PythonService.ps1 -Fast",
+                    "dev:fast":  "concurrently -k -n PY,WEB,ELN \"npm run start:pythonfast\" \"npm run dev:renderer\" \"wait-on http://localhost:5173 \u0026\u0026 npm run dev:electron\"",
+                    "dev:renderer:only":  "npm --prefix ./app/renderer run dev",
+                    "start:python:5113":  "powershell -ExecutionPolicy Bypass -File ./scripts/Start-PythonService.ps1 -Fast -Port 5113",
+                    "dev:electron:5113":  "cross-env ARCANO_PY_PORT=5113 VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+                    "dev:fast:5113":  "concurrently -k -n PY,WEB,ELN \"npm run start:python:5113\" \"npm run dev:renderer\" \"wait-on http://localhost:5173 \u0026\u0026 npm run dev:electron:5113\""
+                },
+    "dependencies":  {
+                         "fs-extra":  "^11.3.1"
+                     }
+}

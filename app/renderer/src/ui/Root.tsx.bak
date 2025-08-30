@@ -1,0 +1,25 @@
+﻿import React, { useEffect } from "react";
+import { useUI } from "../providers/UIProvider";
+import App from "./App";
+import { EnterGate } from "../components/ui/EnterGate";
+import { StatusPip } from "../components/ui/StatusPip";
+import { DiagnosticsPanel } from "../components/dev/DiagnosticsPanel";
+
+export default function Root(){
+  const { view, setView } = useUI();
+
+  // Allow dev panel to force enter without touching code
+  useEffect(()=>{
+    const onForce = ()=> setView("desk");
+    window.addEventListener("arcano-force-enter", onForce as any);
+    return ()=> window.removeEventListener("arcano-force-enter", onForce as any);
+  },[setView]);
+
+  return (
+    <div style={{width:"100%", height:"100%", position:"relative"}}>
+      {view === "loading" ? <EnterGate /> : <App />}
+      <StatusPip />
+      <DiagnosticsPanel />
+    </div>
+  );
+}
